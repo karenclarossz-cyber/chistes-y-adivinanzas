@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chistes & Adivinanzas</title>
+  <meta name="description" content="Página sencilla de chistes y adivinanzas con búsqueda, aleatorio y posibilidad de añadir los tuyos." />
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --accent:#51cfd8; --muted:#94a3b8; --glass:rgba(255,255,255,0.04);
+      --fw: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:var(--fw);background:linear-gradient(180deg,#071021 0%,#071428 60%);color:#e6eef6}
+    .wrap{max-width:1000px;margin:36px auto;padding:20px}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .logo{width:64px;height:64px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent),#7de2f0);color:#072;box-shadow:0 8px 24px rgba(0,0,0,0.5);font-weight:700}
+    h1{margin:0;font-size:1.6rem}
+    p.lead{margin:4px 0 0;color:var(--muted)}
+
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.7)}
+
+    input[type="search"], textarea, input[type="text"], select{background:var(--glass);border:1px solid rgba(255,255,255,0.03);padding:10px;border-radius:10px;color:inherit;width:100%}
+    .row{display:flex;gap:10px}
+    .col{flex:1}
+    button{background:var(--accent);border:0;padding:10px 12px;border-radius:10px;color:#04121a;font-weight:600;cursor:pointer}
+    button.secondary{background:transparent;color:var(--accent);border:1px solid rgba(255,255,255,0.06)}
+    .list{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+    .item{padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);min-height:88px;display:flex;flex-direction:column;justify-content:space-between}
+    .meta{font-size:0.82rem;color:var(--muted);margin-bottom:8px}
+    .text{white-space:pre-wrap}
+    .small{font-size:0.9rem;color:var(--muted)}
+    .actions{display:flex;gap:8px;margin-top:10px}
+    .chip{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:999px;font-size:0.82rem}
+
+    footer{margin-top:24px;color:var(--muted);font-size:0.9rem;text-align:center}
+
+    /* Responsive */
+    @media (max-width:560px){header{flex-direction:column;align-items:flex-start}.row{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">JA</div>
+      <div>
+        <h1>Chistes & Adivinanzas</h1>
+        <p class="lead">Ríe, adivina y añade tus propias ocurrencias. Guardado local para tu navegador.</p>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="controls">
+        <div style="flex:1;min-width:220px">
+          <label class="small">Buscar</label>
+          <input id="search" type="search" placeholder="Buscar por palabra..." />
+        </div>
+        <div style="width:200px">
+          <label class="small">Tipo</label>
+          <select id="filterType">
+            <option value="all">Todos</option>
+            <option value="chiste">Chistes</option>
+            <option value="adivinanza">Adivinanzas</option>
+          </select>
+        </div>
+        <div style="min-width:140px;display:flex;gap:8px;align-items:end">
+          <button id="btnRandom">Aleatorio</button>
+          <button id="btnNew" class="secondary">Añadir</button>
+        </div>
+      </div>
+
+      <div class="row" style="gap:12px">
+        <div class="col">
+          <div id="list" class="list" aria-live="polite"></div>
+        </div>
+        <aside style="width:320px;min-width:240px">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="card" style="padding:12px">
+              <strong>Contadores</strong>
+              <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+                <div class="chip">Chistes: <span id="countJ">0</span></div>
+                <div class="chip">Adivinanzas: <span id="countA">0</span></div>
+                <div class="chip">Guardadas: <span id="countAll">0</span></div>
+              </div>
+            </div>
+
+            <div class="card" style="padding:12px">
+              <strong>Random rápido</strong>
+              <p class="small">Pulsa "Aleatorio" o usa el botón aquí para obtener uno al instante.</p>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <button id="quickJ">Chiste</button>
+                <button id="quickA" class="secondary">Adivinanza</button>
+              </div>
+            </div>
+
+            <div class="card" style="padding:12px">
+              <strong>Cómo usar</strong>
+              <ol class="small">
+                <li>Filtra entre chistes y adivinanzas.</li>
+                <li>Añade los tuyos con el botón "Añadir" (se guardan en tu navegador).</li>
+                <li>Comparte copiando el texto o usando capturas.</li>
+              </ol>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Formulario oculto para añadir -->
+      <div id="formWrap" style="margin-top:12px;display:none">
+        <div class="row">
+          <div class="col">
+            <label class="small">Tipo</label>
+            <select id="typeInput">
+              <option value="chiste">Chiste</option>
+              <option value="adivinanza">Adivinanza</option>
+            </select>
+          </div>
+          <div class="col">
+            <label class="small">Título (opcional)</label>
+            <input id="titleInput" type="text" placeholder="Ej: Chiste corto" />
+          </div>
+        </div>
+        <div style="margin-top:8px">
+          <label class="small">Contenido</label>
+          <textarea id="contentInput" rows="4" placeholder="Escribe el chiste o la adivinanza aquí"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end">
+          <button id="saveBtn">Guardar</button>
+          <button id="cancelBtn" class="secondary">Cancelar</button>
+        </div>
+      </div>
+
+    </div>
+
+    <footer>
+      Hecho con ❤️ — Puedes personalizar o pedirme funciones nuevas.
+    </footer>
+  </div>
+
+  <script>
+    // Datos iniciales de ejemplo
+    const initial = [
+      {id:1,type:'chiste',title:'Clásico',text:'—¿Cuál es el colmo de un electricista?\nQue le dé miedo la oscuridad.'},
+      {id:2,type:'chiste',title:'Juego de palabras',text:'¿Qué le dijo una iguana a su hermana gemela?\nIguanita.'},
+      {id:3,type:'adivinanza',title:'Fácil',text:'Blanca por dentro, verde por fuera. Si quieres que te lo diga, espera.'},
+      {id:4,type:'adivinanza',title:'Corta',text:'Tiene agujas pero no cose. ¿Qué es?\n(Respuesta: un pino o un reloj, deja jugar al usuario)'}
+    ];
+
+    // Elementos
+    const listEl = document.getElementById('list');
+    const search = document.getElementById('search');
+    const filterType = document.getElementById('filterType');
+    const btnRandom = document.getElementById('btnRandom');
+    const btnNew = document.getElementById('btnNew');
+    const formWrap = document.getElementById('formWrap');
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const typeInput = document.getElementById('typeInput');
+    const titleInput = document.getElementById('titleInput');
+    const contentInput = document.getElementById('contentInput');
+    const quickJ = document.getElementById('quickJ');
+    const quickA = document.getElementById('quickA');
+    const countJ = document.getElementById('countJ');
+    const countA = document.getElementById('countA');
+    const countAll = document.getElementById('countAll');
+
+    // Manejo de datos: cargar de localStorage o usar inicial
+    const STORAGE_KEY = 'chistes_adivinanzas_v1';
+    let items = load();
+
+    function load(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(raw) return JSON.parse(raw);
+      }catch(e){console.warn('Error cargando storage',e)}
+      // clonar inicial para evitar mutación
+      return JSON.parse(JSON.stringify(initial));
+    }
+    function save(){
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(items));
+      render();
+    }
+
+    // Renderizado
+    function render(){
+      const q = search.value.trim().toLowerCase();
+      const t = filterType.value;
+      const filtered = items.filter(it=>{
+        if(t!=='all' && it.type!==t) return false;
+        if(!q) return true;
+        return (it.title||'').toLowerCase().includes(q) || it.text.toLowerCase().includes(q);
+      });
+
+      listEl.innerHTML = '';
+      if(filtered.length===0){
+        listEl.innerHTML = '<div style="padding:18px;color:var(--muted)">No hay resultados — prueba otra búsqueda o añade uno nuevo.</div>';
+      }
+
+      filtered.forEach(it=>{
+        const el = document.createElement('div'); el.className='item';
+        const meta = document.createElement('div'); meta.className='meta'; meta.textContent = it.type.toUpperCase() + (it.title?(' • '+it.title):'');
+        const texto = document.createElement('div'); texto.className='text'; texto.textContent = it.text;
+        const actions = document.createElement('div'); actions.className='actions';
+
+        const btnCopy = document.createElement('button'); btnCopy.textContent='Copiar';
+        btnCopy.onclick = ()=>{navigator.clipboard.writeText(it.text).then(()=>{btnCopy.textContent='Copiado!'; setTimeout(()=>btnCopy.textContent='Copiar',1200)})}
+        const btnShow = document.createElement('button'); btnShow.className='secondary'; btnShow.textContent='Mostrar';
+        btnShow.onclick = ()=>{ alert((it.title?it.title+'\n\n':'')+it.text) }
+
+        const btnDel = document.createElement('button'); btnDel.className='secondary'; btnDel.textContent='Eliminar';
+        btnDel.onclick = ()=>{ if(confirm('Eliminar este ítem?')){ items = items.filter(x=>x.id!==it.id); save(); } }
+
+        actions.appendChild(btnCopy); actions.appendChild(btnShow); actions.appendChild(btnDel);
+        el.appendChild(meta); el.appendChild(texto); el.appendChild(actions);
+        listEl.appendChild(el);
+      });
+
+      // contadores
+      const ch = items.filter(x=>x.type==='chiste').length;
+      const ad = items.filter(x=>x.type==='adivinanza').length;
+      countJ.textContent = ch; countA.textContent = ad; countAll.textContent = items.length;
+    }
+
+    // Eventos
+    search.addEventListener('input',()=>render());
+    filterType.addEventListener('change',()=>render());
+    btnNew.addEventListener('click',()=>{ formWrap.style.display = formWrap.style.display==='none'?'block':'none'; window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}) })
+    cancelBtn.addEventListener('click',()=>{ formWrap.style.display='none'; titleInput.value=''; contentInput.value=''; })
+
+    saveBtn.addEventListener('click',()=>{
+      const type = typeInput.value; const title = titleInput.value.trim(); const text = contentInput.value.trim();
+      if(!text){ alert('Escribe algo en el contenido.'); return; }
+      const id = Date.now();
+      items.unshift({id,type,title,text});
+      save();
+      titleInput.value=''; contentInput.value=''; formWrap.style.display='none';
+    });
+
+    btnRandom.addEventListener('click',()=>{ const i = Math.floor(Math.random()*items.length); if(items[i]) alert((items[i].title?items[i].title+'\n\n':'')+items[i].text) });
+    quickJ.addEventListener('click',()=>{ const set = items.filter(x=>x.type==='chiste'); if(set.length===0){alert('No hay chistes guardados.'); return;} const it=set[Math.floor(Math.random()*set.length)]; alert((it.title?it.title+'\n\n':'')+it.text) });
+    quickA.addEventListener('click',()=>{ const set = items.filter(x=>x.type==='adivinanza'); if(set.length===0){alert('No hay adivinanzas guardadas.'); return;} const it=set[Math.floor(Math.random()*set.length)]; alert((it.title?it.title+'\n\n':'')+it.text) });
+
+    // Inicializar
+    render();
+
+    // Pequeña mejora: atajo de teclado R para aleatorio, N para formulario
+    document.addEventListener('keydown',(e)=>{
+      if(e.key.toLowerCase()==='r') btnRandom.click();
+      if(e.key.toLowerCase()==='n') btnNew.click();
+    });
+  </script>
+</body>
+</html>
